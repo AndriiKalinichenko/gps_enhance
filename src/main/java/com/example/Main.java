@@ -34,7 +34,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Map;
 
-@Controller
+@RestController
 @SpringBootApplication
 public class Main {
 
@@ -75,8 +75,8 @@ public class Main {
   }
 
   @RequestMapping("/hello")
-  public Object hello() {
-    return "Hello, World!";
+  public Hello hello() {
+    return new Hello();
   }
 
   @Bean
