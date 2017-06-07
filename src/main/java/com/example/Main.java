@@ -193,6 +193,10 @@ public class Main {
               double longEps = realGeodetic.y - geodetic.y;
               double altEps = realGeodetic.z - geodetic.z;
 
+              if (true) {
+                  return "lat: " + latEps + ", long: " + longEps + ", alt: " + altEps;
+              }
+
 
               PreparedStatement ps = connection.prepareStatement(
                       "UPDATE points " +
@@ -205,7 +209,7 @@ public class Main {
               ps.executeUpdate();
           }
       } catch (Exception e) {
-          return "Error" + e.getMessage();
+          return "Error: " + e.getMessage();
       }
 
       return "Success";
