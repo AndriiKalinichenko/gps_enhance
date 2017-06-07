@@ -48,6 +48,41 @@ public class Main {
     SpringApplication.run(Main.class, args);
   }
 
+  public static CoordinateTuple llaToGeodetic(CoordinateTuple lla) {
+      double a = 6378137;
+      double b = 6356732.31424518;
+      double f = 1.0 / 298.257223563;
+      double ea = Math.sqrt((a * a - b * b) / a * a);
+      double eb = Math.sqrt((a * a - b * b) / b * b);
+      double n = a / Math.sqrt(1 - ea * ea * Math.pow(lla.x, 2));
+
+      CoordinateTuple geodetic = new CoordinateTuple();
+      geodetic.x = (n + lla.z) * Math.cos(lla.x) * Math.cos(lla.y);
+      geodetic.y = (n + lla.z) * Math.cos(lla.x) * Math.sin(lla.y);
+      geodetic.z = (b * b / a / a * n + lla.z) * Math.sin(lla.x);
+
+      return geodetic;
+  }
+
+  public static CoordinateTuple geodeticToLla(CoordinateTuple geodetic) {
+      double a = 6378137;
+      double b = 6356732.31424518;
+      double f = 1.0 / 298.257223563;
+      double ea = Math.sqrt((a * a - b * b) / a * a);
+      double eb = Math.sqrt((a * a - b * b) / b * b);
+      double p = Math.sqrt(geodetic.x * geodetic.x + geodetic.y * geodetic.y);
+      double theta = Math.atan(geodetic.z * a / p / b);
+
+      CoordinateTuple lla = new CoordinateTuple();
+      lla.x = Math.atan((geodetic.z + eb * eb * b * Math.pow(Math.sin(theta), 3))
+              / (p - ea * ea * a * Math.pow(Math.cos(theta), 3)));
+      lla.y = Math.atan(geodetic.y / geodetic.x);
+      double n = a / Math.sqrt(1 - ea * ea * Math.pow(lla.x, 2));
+      lla.z = p / Math.cos(lla.x) - n;
+
+      return lla;
+  }
+
   @RequestMapping("/addPoint/latitude/{latitude}/longitude/{longitude}/altitude/{altitude}")
   public String setPoint(@PathVariable(value = "latitude") double latitude,
                          @PathVariable(value = "longitude") double longitude,
@@ -129,29 +164,59 @@ public class Main {
       return "Success";
   }
 
-  @RequestMapping("/setPointEps/id/{id}/latEps/{latEps}/longEps/{longEps}/altEps/{altEps}")
+  @RequestMapping("/setPointEps/id/{id}/latReal/{latReal}/longReal/{longReal}/altReal/{altReal}")
   public String setPointEps(@PathVariable(value = "id") int id,
-                            @PathVariable(value = "latEps") double latEps,
-                            @PathVariable(value = "longEps") double longEps,
-                            @PathVariable(value = "altEps") double altEps) {
+                            @PathVariable(value = "latReal") double latReal,
+                            @PathVariable(value = "longReal") double longReal,
+                            @PathVariable(value = "altReal") double altReal) {
 
       try (Connection connection = dataSource.getConnection()) {
 
-          PreparedStatement ps = connection.prepareStatement(
-                  "UPDATE points " +
-                  "SET latEps = ?, longEps = ?, altEps = ?, lastUpdate = now()" +
-                  "WHERE id = ?;");
-          ps.setDouble(1, latEps);
-          ps.setDouble(2, longEps);
-          ps.setDouble(3, altEps);
-          ps.setInt(4, id);
-          ps.executeUpdate();
+          Statement s = connection.createStatement();
+          ResultSet rs = s.executeQuery("select (latitude, longitude, altitude) from points where id = " + id);
 
+          if (rs.next()) {
+              CoordinateTuple realLla = new CoordinateTuple();
+              realLla.x = latReal;
+              realLla.y = longReal;
+              realLla.z = altReal;
+
+              CoordinateTuple lla = new CoordinateTuple();
+              lla.x = rs.getDouble(1);
+              lla.y = rs.getDouble(2);
+              lla.z = rs.getDouble(3);
+
+              CoordinateTuple realGeodetic = llaToGeodetic(realLla);
+              CoordinateTuple geodetic = llaToGeodetic(lla);
+
+              double latEps = realGeodetic.x - geodetic.x;
+              double longEps = realGeodetic.y - geodetic.y;
+              double altEps = realGeodetic.z - geodetic.z;
+
+
+              PreparedStatement ps = connection.prepareStatement(
+                      "UPDATE points " +
+                      "SET latEps = ?, longEps = ?, altEps = ?, lastUpdate = now()" +
+                      "WHERE id = ?;");
+              ps.setDouble(1, latEps);
+              ps.setDouble(2, longEps);
+              ps.setDouble(3, altEps);
+              ps.setInt(4, id);
+              ps.executeUpdate();
+          }
       } catch (Exception e) {
           return "Error" + e.getMessage();
       }
 
       return "Success";
+  }
+
+  @RequestMapping("/getPrecision/latitude/{latitude}/longitude/{longitude}/altitude/{altitude}")
+  public String getPrecision(@PathVariable(value = "latitude") double latitude,
+                             @PathVariable(value = "longitude") double longitude,
+                             @PathVariable(value = "altitude") double altitude) {
+
+
   }
 
   @RequestMapping("/")
