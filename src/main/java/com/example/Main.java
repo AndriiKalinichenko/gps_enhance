@@ -75,7 +75,7 @@ public class Main {
   }
 
   @RequestMapping("/hello")
-  public String hello() {
+  public Object hello() {
     return "Hello, World!";
   }
 
