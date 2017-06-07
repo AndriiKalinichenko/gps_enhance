@@ -48,7 +48,7 @@ public class Main {
     SpringApplication.run(Main.class, args);
   }
 
-  @RequestMapping("/setPoint/latitude/{latitude}/longitude/{longitude}/altitude/{altitude}")
+  @RequestMapping("/addPoint/latitude/{latitude}/longitude/{longitude}/altitude/{altitude}")
   public String setPoint(@PathVariable(value = "latitude") double latitude,
                          @PathVariable(value = "longitude") double longitude,
                          @PathVariable(value = "altitude") double altitude) {
@@ -63,7 +63,7 @@ public class Main {
                   "latEps double precision," +
                   "longEps double precision," +
                   "altEps double precision," +
-                  "lastUpdate timestamp);");
+                  "lastUpdate timestamp)");
 
           PreparedStatement ps = connection.prepareStatement(
                   "INSERT INTO points (latitude, longitude, altitude, latEps, longEps, altEps)" +
@@ -121,6 +121,31 @@ public class Main {
       try (Connection connection = dataSource.getConnection()) {
           Statement s = connection.createStatement();
           s.execute("DELETE FROM points WHERE id = " + id);
+      } catch (Exception e) {
+          return "Error" + e.getMessage();
+      }
+
+      return "Success";
+  }
+
+  @RequestMapping("/setPointEps/id/{id}/latEps/{latEps}/longEps/{longEps}/altEps/{altEps}")
+  public String setPointEps(@PathVariable(value = "id") int id,
+                            @PathVariable(value = "latEps") double latEps,
+                            @PathVariable(value = "longEps") double longEps,
+                            @PathVariable(value = "altEps") double altEps) {
+
+      try (Connection connection = dataSource.getConnection()) {
+
+          PreparedStatement ps = connection.prepareStatement(
+                  "UPDATE points " +
+                  "SET latEps = ?, longEps = ?, altEps = ?" +
+                  "WHERE id = ?;");
+          ps.setDouble(1, latEps);
+          ps.setDouble(2, longEps);
+          ps.setDouble(3, altEps);
+          ps.setInt(4, id);
+          ps.executeUpdate();
+
       } catch (Exception e) {
           return "Error" + e.getMessage();
       }
