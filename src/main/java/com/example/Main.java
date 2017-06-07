@@ -216,7 +216,7 @@ public class Main {
                              @PathVariable(value = "longitude") double longitude,
                              @PathVariable(value = "altitude") double altitude) {
 
-
+      return "0";
   }
 
   @RequestMapping("/")
