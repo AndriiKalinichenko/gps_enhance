@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -66,7 +67,8 @@ public class Main {
 
           PreparedStatement ps = connection.prepareStatement(
                   "INSERT INTO points (latitude, longitude, altitude, latEps, longEps, altEps)" +
-                  "VALUES (?, ?, ?, ?, ?, ?)");
+                  "VALUES (?, ?, ?, ?, ?, ?)",
+                  Statement.RETURN_GENERATED_KEYS);
           ps.setDouble(1, latitude);
           ps.setDouble(2, longitude);
           ps.setDouble(3, altitude);
@@ -86,6 +88,32 @@ public class Main {
       }
 
       return "Insert operation failed";
+  }
+
+  @RequestMapping("/getAllPoints")
+  public Object getAllPoints() {
+      try (Connection connection = dataSource.getConnection()) {
+          Statement s = connection.createStatement();
+          ResultSet rs = s.executeQuery("select * from points");
+          List<Point> points = new ArrayList<>();
+
+          while (rs.next()) {
+              Point p = new Point();
+              p.id = rs.getInt(1);
+              p.latitude = rs.getDouble(2);
+              p.longitude = rs.getDouble(3);
+              p.altitude = rs.getDouble(4);
+              p.latEps = rs.getDouble(5);
+              p.longEps = rs.getDouble(6);
+              p.altEps = rs.getDouble(7);
+
+              points.add(p);
+          }
+
+          return points;
+      } catch (Exception e) {
+          return "Error" + e.getMessage();
+      }
   }
 
   @RequestMapping("/")
