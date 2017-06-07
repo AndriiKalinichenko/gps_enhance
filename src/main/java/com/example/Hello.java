@@ -1,5 +1,5 @@
 package com.example;
 
 public class Hello {
-  public string World = "Yo";
+  public String World = "Yo";
 }
