@@ -24,14 +24,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -47,6 +45,47 @@ public class Main {
 
   public static void main(String[] args) throws Exception {
     SpringApplication.run(Main.class, args);
+  }
+
+  @RequestMapping("/setPoint/latitude/{latitude}/longitude/{longitude}/altitude/{altitude}")
+  public String setPoint(@PathVariable(value = "latitude") double latitude,
+                         @PathVariable(value = "longitude") double longitude,
+                         @PathVariable(value = "altitude") double altitude) {
+
+      try (Connection connection = dataSource.getConnection()) {
+          Statement s = connection.createStatement();
+          s.executeUpdate(
+                  "CREATE TABLE IF NOT EXISTS points (id SERIAL, " +
+                  "latitude double precision, " +
+                  "longitude double precision, " +
+                  "altitude double precision," +
+                  "latEps double precision," +
+                  "longEps double precision," +
+                  "altEps double precision," +
+                  "lastUpdate timestamp);");
+
+          PreparedStatement ps = connection.prepareStatement(
+                  "INSERT INTO points (latitude, longtitude, altitude, latEps, longEps, altEps)" +
+                  "VALUES (?, ?, ?, ?, ?, ?)");
+          ps.setDouble(1, latitude);
+          ps.setDouble(2, longitude);
+          ps.setDouble(3, altitude);
+          ps.setDouble(4, 0);
+          ps.setDouble(5, 0);
+          ps.setDouble(6, 0);
+          ps.executeUpdate();
+
+          ResultSet rs = ps.getGeneratedKeys();
+
+          if (rs.next()) {
+              return "Id: " + rs.getInt(1);
+          }
+
+      } catch (Exception e) {
+          return "Error" + e.getMessage();
+      }
+
+      return "Insert operation failed";
   }
 
   @RequestMapping("/")
