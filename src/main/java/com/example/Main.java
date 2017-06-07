@@ -65,7 +65,7 @@ public class Main {
                   "lastUpdate timestamp);");
 
           PreparedStatement ps = connection.prepareStatement(
-                  "INSERT INTO points (latitude, longtitude, altitude, latEps, longEps, altEps)" +
+                  "INSERT INTO points (latitude, longitude, altitude, latEps, longEps, altEps)" +
                   "VALUES (?, ?, ?, ?, ?, ?)");
           ps.setDouble(1, latitude);
           ps.setDouble(2, longitude);
