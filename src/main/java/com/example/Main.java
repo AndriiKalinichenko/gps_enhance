@@ -116,6 +116,18 @@ public class Main {
       }
   }
 
+  @RequestMapping("/deletePoint/id/{id}")
+  public String deletePoint(@PathVariable(value = "id") int id) {
+      try (Connection connection = dataSource.getConnection()) {
+          Statement s = connection.createStatement();
+          s.execute("DELETE FROM points WHERE id = " + id);
+      } catch (Exception e) {
+          return "Error" + e.getMessage();
+      }
+
+      return "Success";
+  }
+
   @RequestMapping("/")
   String index() {
     return "index";
