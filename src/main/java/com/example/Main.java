@@ -74,6 +74,11 @@ public class Main {
     }
   }
 
+  @RequestMapping("/hello")
+  public String hello() {
+    return "Hello, World!";
+  }
+
   @Bean
   public DataSource dataSource() throws SQLException {
     if (dbUrl == null || dbUrl.isEmpty()) {
