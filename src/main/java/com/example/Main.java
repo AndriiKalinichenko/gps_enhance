@@ -106,6 +106,7 @@ public class Main {
               p.latEps = rs.getDouble(5);
               p.longEps = rs.getDouble(6);
               p.altEps = rs.getDouble(7);
+              p.timestamp = rs.getTimestamp(8);
 
               points.add(p);
           }
@@ -138,7 +139,7 @@ public class Main {
 
           PreparedStatement ps = connection.prepareStatement(
                   "UPDATE points " +
-                  "SET latEps = ?, longEps = ?, altEps = ?" +
+                  "SET latEps = ?, longEps = ?, altEps = ?, lastUpdate = now()" +
                   "WHERE id = ?;");
           ps.setDouble(1, latEps);
           ps.setDouble(2, longEps);
